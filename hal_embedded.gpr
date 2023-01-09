@@ -1,0 +1,87 @@
+with "config/hal_embedded_config.gpr";
+project Hal_Embedded is
+
+   for Library_Name use "Hal_Embedded";
+   for Library_Version use Project'Library_Name & ".so." & Hal_Embedded_Config.Crate_Version;
+
+   HAL_Src_Dirs := ();
+   case Hal_Embedded_Config.Audio is
+      when "True" => HAL_Src_Dirs := HAL_Src_Dirs & ("src/audio");
+      when others => null;
+   end case;
+   case Hal_Embedded_Config.Bitmap is
+      when "True" => HAL_Src_Dirs := HAL_Src_Dirs & ("src/bitmap");
+      when others => null;
+   end case;
+   case Hal_Embedded_Config.Block_Drivers is
+      when "True" => HAL_Src_Dirs := HAL_Src_Dirs & ("src/block_drivers");
+      when others => null;
+   end case;
+   case Hal_Embedded_Config.Dsi is
+      when "True" => HAL_Src_Dirs := HAL_Src_Dirs & ("src/dsi");
+      when others => null;
+   end case;
+   case Hal_Embedded_Config.Filesystem is
+      when "True" => HAL_Src_Dirs := HAL_Src_Dirs & ("src/filesystem");
+      when others => null;
+   end case;
+   case Hal_Embedded_Config.Framebuffer is
+      when "True" => HAL_Src_Dirs := HAL_Src_Dirs & ("src/framebuffer");
+      when others => null;
+   end case;
+   case Hal_Embedded_Config.Gpio is
+      when "True" => HAL_Src_Dirs := HAL_Src_Dirs & ("src/gpio");
+      when others => null;
+   end case;
+   case Hal_Embedded_Config.I2c is
+      when "True" => HAL_Src_Dirs := HAL_Src_Dirs & ("src/i2c");
+      when others => null;
+   end case;
+   case Hal_Embedded_Config.Rtc is
+      when "True" => HAL_Src_Dirs := HAL_Src_Dirs & ("src/rtc");
+      when others => null;
+   end case;
+   case Hal_Embedded_Config.Sdmmc is
+      when "True" => HAL_Src_Dirs := HAL_Src_Dirs & ("src/sdmmc");
+      when others => null;
+   end case;
+   case Hal_Embedded_Config.Spi is
+      when "True" => HAL_Src_Dirs := HAL_Src_Dirs & ("src/Spi");
+      when others => null;
+   end case;
+   case Hal_Embedded_Config.Time is
+      when "True" => HAL_Src_Dirs := HAL_Src_Dirs & ("src/time");
+      when others => null;
+   end case;
+   case Hal_Embedded_Config.Touch_Panel is
+      when "True" => HAL_Src_Dirs := HAL_Src_Dirs & ("src/touch_panel");
+      when others => null;
+   end case;
+   case Hal_Embedded_Config.Uart is
+      when "True" => HAL_Src_Dirs := HAL_Src_Dirs & ("src/uart");
+      when others => null;
+   end case;
+
+   for Source_Dirs use ("src/", "config/") & HAL_Src_Dirs;
+   for Object_Dir use "obj/" & Hal_Embedded_Config.Build_Profile;
+   for Create_Missing_Dirs use "True";
+   for Library_Dir use "lib";
+
+   type Library_Type_Type is ("relocatable", "static", "static-pic");
+   Library_Type : Library_Type_Type :=
+     external ("HAL_EMBEDDED_LIBRARY_TYPE", external ("LIBRARY_TYPE", "static"));
+   for Library_Kind use Library_Type;
+
+   package Compiler is
+      for Default_Switches ("Ada") use Hal_Embedded_Config.Ada_Compiler_Switches;
+   end Compiler;
+
+   package Binder is
+      for Switches ("Ada") use ("-Es"); --  Symbolic traceback
+   end Binder;
+
+   package Install is
+      for Artifacts (".") use ("share");
+   end Install;
+
+end Hal_Embedded;
