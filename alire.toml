@@ -1,7 +1,10 @@
 name = "hal_embedded"
 description = "Hardware Abstraction Layer (HAL)"
 version = "1.0.0"
+licenses = "BSD-3-Clause"
+tags = ["embedded"]
 
+website = "https://github.com/wolfbiters/hal_embedded"
 authors = ["wolf biters"]
 maintainers = ["wolf biters <the.wolf.biters@gmail.com>"]
 maintainers-logins = ["wolfbiters"]
