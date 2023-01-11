@@ -29,6 +29,8 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Beta_Types; use Beta_Types;
+
 package HAL.GPIO is
 
    type GPIO_Point is limited interface;

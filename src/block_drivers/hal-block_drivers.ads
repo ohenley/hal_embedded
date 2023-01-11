@@ -31,12 +31,14 @@
 
 with Interfaces; use Interfaces;
 
+with Beta_Types; use Beta_Types;
+
 package HAL.Block_Drivers is
 
    type Block_Driver is limited interface;
    type Any_Block_Driver is access all Block_Driver'Class;
 
-   subtype Block is Byte_Array;
+   subtype Block is UInt8_Array;
 
    Block_Size : constant := 512;
    --  Size of a block, for block number.

@@ -29,6 +29,8 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Beta_Types; use Beta_Types;
+
 package HAL.Touch_Panel is
 
    type Event_Kind is
@@ -42,7 +44,7 @@ package HAL.Touch_Panel is
       Y        : Natural;
       Weight   : Natural;
       Event    : Event_Kind;
-      Touch_Id : Byte;
+      Touch_Id : UInt8;
    end record;
 
    Null_Touch_State : constant TP_Touch_State := (0, 0, 0, No_Event, 0);

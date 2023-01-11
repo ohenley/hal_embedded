@@ -29,6 +29,8 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Beta_Types; use Beta_Types;
+
 package HAL.Time is
 
    type Delays is limited interface;

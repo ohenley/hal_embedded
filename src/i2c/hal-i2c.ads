@@ -29,6 +29,8 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Beta_Types; use Beta_Types;
+
 package HAL.I2C is
 
    type I2C_Status is
@@ -37,7 +39,7 @@ package HAL.I2C is
       Err_Timeout,
       Busy);
 
-   subtype I2C_Data is Byte_Array;
+   subtype I2C_Data is UInt8_Array;
 
    type I2C_Memory_Address_Size is
      (Memory_Size_8b,

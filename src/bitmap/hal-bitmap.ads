@@ -31,6 +31,8 @@
 
 with System;
 
+with Beta_Types; use Beta_Types;
+
 package HAL.Bitmap is
 
    type Orientation_Mode is (Default, Portrait, Landscape);
@@ -79,10 +81,10 @@ package HAL.Bitmap is
    end record;
 
    type Bitmap_Color is record
-      Alpha : Byte;
-      Red   : Byte;
-      Green : Byte;
-      Blue  : Byte;
+      Alpha : UInt8;
+      Red   : UInt8;
+      Green : UInt8;
+      Blue  : UInt8;
    end record with
      Size => 32;
 

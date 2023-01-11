@@ -31,6 +31,8 @@
 
 with Interfaces; use Interfaces;
 
+with Beta_Types; use Beta_Types;
+
 package HAL.Audio is
 
    type Audio_Buffer is array (Natural range <>) of Integer_16

@@ -30,7 +30,6 @@
 ------------------------------------------------------------------------------
 
 with System.Storage_Elements; use System.Storage_Elements;
-with Interfaces;              use Interfaces;
 
 package body HAL.Bitmap is
 
@@ -102,18 +101,19 @@ package body HAL.Bitmap is
 
          when RGB_888 =>
             declare
-               Pixel_B : aliased Byte with
+               Pixel_B : aliased UInt8 with
                  Import, Address => Buffer.Addr + Storage_Offset (Offset * 3);
-               Pixel_G : aliased Byte with
+               Pixel_G : aliased UInt8 with
                  Import,
                  Address => Buffer.Addr + Storage_Offset (Offset * 3 + 1);
-               Pixel_R : aliased Byte with
+               Pixel_R : aliased UInt8 with
                  Import,
                  Address => Buffer.Addr + Storage_Offset (Offset * 3 + 2);
-               R : constant Byte :=
-                 Byte (Shift_Right (Value and 16#FF_0000#, 16));
-               G : constant Byte := Byte (Shift_Right (Value and 16#FF00#, 8));
-               B : constant Byte := Byte (Value and 16#FF#);
+               R : constant UInt8 :=
+                 UInt8 (Shift_Right (Value and 16#FF_0000#, 16));
+               G : constant UInt8 :=
+                 UInt8 (Shift_Right (Value and 16#FF00#, 8));
+               B : constant UInt8 := UInt8 (Value and 16#FF#);
             begin
                Pixel_B := B;
                Pixel_G := G;
@@ -130,23 +130,23 @@ package body HAL.Bitmap is
 
          when L_8 | AL_44 | A_8 =>
             declare
-               Pixel : aliased Byte with
+               Pixel : aliased UInt8 with
                  Import, Address => Buffer.Addr + Storage_Offset (Offset);
             begin
-               Pixel := Byte (Value and 16#FF#);
+               Pixel := UInt8 (Value and 16#FF#);
             end;
 
          when L_4 | A_4 =>
             declare
-               Pixel : aliased Byte with
+               Pixel : aliased UInt8 with
                  Import, Address => Buffer.Addr + Storage_Offset (Offset / 2);
             begin
                if Offset mod 2 = 0 then
                   Pixel :=
                     (Pixel and 16#0F#) or
-                    Shift_Left (Byte (Value and 16#0F#), 4);
+                    Shift_Left (UInt8 (Value and 16#0F#), 4);
                else
-                  Pixel := (Pixel and 16#F0#) or Byte (Value and 16#0F#);
+                  Pixel := (Pixel and 16#F0#) or UInt8 (Value and 16#0F#);
                end if;
             end;
 
@@ -186,8 +186,8 @@ package body HAL.Bitmap is
          RB := FgB * FgA / RA + BgB * BgA * (1.0 - FgA) / RA;
 
          Col :=
-           (Alpha => Byte (RA * 255.0), Red => Byte (RR * 255.0),
-            Green => Byte (RG * 255.0), Blue => Byte (RB * 255.0));
+           (Alpha => UInt8 (RA * 255.0), Red => UInt8 (RR * 255.0),
+            Green => UInt8 (RG * 255.0), Blue => UInt8 (RB * 255.0));
          Set_Pixel (Bitmap_Buffer'Class (Buffer), X, Y, Col);
       end if;
    end Set_Pixel_Blend;
@@ -237,12 +237,12 @@ package body HAL.Bitmap is
 
          when RGB_888 =>
             declare
-               Pixel_B : aliased Byte with
+               Pixel_B : aliased UInt8 with
                  Import, Address => Buffer.Addr + Storage_Offset (Offset * 3);
-               Pixel_G : aliased Byte with
+               Pixel_G : aliased UInt8 with
                  Import,
                  Address => Buffer.Addr + Storage_Offset (Offset * 3 + 1);
-               Pixel_R : aliased Byte with
+               Pixel_R : aliased UInt8 with
                  Import,
                  Address => Buffer.Addr + Storage_Offset (Offset * 3 + 2);
             begin
@@ -261,7 +261,7 @@ package body HAL.Bitmap is
 
          when L_8 | AL_44 | A_8 =>
             declare
-               Pixel : aliased Byte with
+               Pixel : aliased UInt8 with
                  Import, Address => Buffer.Addr + Storage_Offset (Offset);
             begin
                return UInt32 (Pixel);
@@ -269,7 +269,7 @@ package body HAL.Bitmap is
 
          when L_4 | A_4 =>
             declare
-               Pixel : aliased Byte with
+               Pixel : aliased UInt8 with
                  Import, Address => Buffer.Addr + Storage_Offset (Offset / 2);
             begin
                if Offset mod 2 = 0 then
@@ -347,7 +347,7 @@ package body HAL.Bitmap is
    is
       pragma Unreferenced (X_Bg, Y_Bg, Synchronous, Clean_Cache);
       use type System.Address;
-      Col : Unsigned_32;
+      Col : UInt32;
    begin
       if Bg_Buffer.Addr /= System.Null_Address then
          raise Constraint_Error with "Not implemented yet.";
@@ -504,16 +504,16 @@ package body HAL.Bitmap is
    is
       Ret : UInt32 := 0;
 
-      procedure Add_Byte (Value : Byte; Pos : Natural; Size : Positive) with
+      procedure Add_Byte (Value : UInt8; Pos : Natural; Size : Positive) with
         Inline;
 
-      function Luminance return Byte;
+      function Luminance return UInt8;
 
       --------------
       -- Add_Byte --
       --------------
 
-      procedure Add_Byte (Value : Byte; Pos : Natural; Size : Positive) is
+      procedure Add_Byte (Value : UInt8; Pos : Natural; Size : Positive) is
          Val : constant UInt32 :=
            Shift_Left
              (UInt32 (Shift_Right (Value, abs (Integer (Size) - 8))), Pos);
@@ -525,10 +525,10 @@ package body HAL.Bitmap is
       -- Luminance --
       ---------------
 
-      function Luminance return Byte is
+      function Luminance return UInt8 is
       begin
          return
-           Byte
+           UInt8
              (Shift_Right
                 (UInt32 (Col.Red) * 3 + UInt32 (Col.Blue) +
                  UInt32 (Col.Green) * 4,
@@ -597,18 +597,18 @@ package body HAL.Bitmap is
      (Mode : Bitmap_Color_Mode; Col : UInt32) return Bitmap_Color
    is
 
-      function Get_Byte (Pos : Natural; Size : Positive) return Byte with
+      function Get_Byte (Pos : Natural; Size : Positive) return UInt8 with
         Inline;
 
       --------------
       -- Get_Byte --
       --------------
 
-      function Get_Byte (Pos : Natural; Size : Positive) return Byte is
-         Ret  : Byte;
+      function Get_Byte (Pos : Natural; Size : Positive) return UInt8 is
+         Ret  : UInt8;
          Mask : constant UInt32 := Shift_Left (2**Size - 1, Pos);
       begin
-         Ret := Byte (Shift_Right (Col and Mask, Pos));
+         Ret := UInt8 (Shift_Right (Col and Mask, Pos));
 
          if Size = 8 then
             return Ret;
@@ -623,7 +623,7 @@ package body HAL.Bitmap is
          end if;
       end Get_Byte;
 
-      A, R, G, B : Byte;
+      A, R, G, B : UInt8;
    begin
       case Mode is
          when ARGB_8888 =>
