@@ -1,6 +1,9 @@
 with "config/hal_embedded_config.gpr";
 project Hal_Embedded is
 
+   for Target use "arm-eabi";
+   for Runtime ("Ada") use "embedded-stm32f429disco";
+
    for Library_Name use "Hal_Embedded";
    for Library_Version use Project'Library_Name & ".so." & Hal_Embedded_Config.Crate_Version;
 
