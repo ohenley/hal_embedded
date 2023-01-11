@@ -30,7 +30,6 @@
 ------------------------------------------------------------------------------
 
 package HAL.Real_Time_Clock is
-   pragma Preelaborate;
 
    type RTC_Hour is mod 24;
    type RTC_Minute is mod 60;

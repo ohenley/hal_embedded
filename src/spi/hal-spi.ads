@@ -29,12 +29,7 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Beta_Types;
-
 package HAL.SPI is
-   pragma Preelaborate;
-
-   package BT renames Beta_Types;
 
    type SPI_Status is
      (Ok,
@@ -46,9 +41,9 @@ package HAL.SPI is
      (Data_Size_8b,
       Data_Size_16b);
 
-   type SPI_Data_8b is array (Natural range <>) of BT.UInt8;
+   type SPI_Data_8b is array (Natural range <>) of Byte;
 
-   type SPI_Data_16b is array (Natural range <>) of BT.UInt16;
+   type SPI_Data_16b is array (Natural range <>) of UInt16;
 
    type SPI_Port is limited interface;
 

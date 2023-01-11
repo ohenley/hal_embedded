@@ -31,16 +31,11 @@
 
 --  Display Serial Interface
 
-with Beta_Types;
-
 package HAL.DSI is
-   pragma Preelaborate;
 
-   package BT renames Beta_Types;
+   subtype DSI_Virtual_Channel_ID is UInt2;
 
-   subtype DSI_Virtual_Channel_ID is BT.UInt2;
-
-   type DSI_Data is array (Positive range <>) of BT.UInt8;
+   type DSI_Data is array (Positive range <>) of Byte;
 
    type DSI_Pkt_Data_Type is
      (DCS_Short_Pkt_Write_P0, --  DCS Short write, no parameter
@@ -69,14 +64,14 @@ package HAL.DSI is
      (Port       : in out DSI_Port;
       Channel_ID : DSI_Virtual_Channel_ID;
       Mode       : DSI_Short_Write_Packet_Data_Type;
-      Param1     : BT.UInt8;
-      Param2     : BT.UInt8) is abstract;
+      Param1     : Byte;
+      Param2     : Byte) is abstract;
 
    procedure DSI_Long_Write
      (Port       : in out DSI_Port;
       Channel_Id : DSI_Virtual_Channel_ID;
       Mode       : DSI_Long_Write_Packet_Data_Type;
-      Param1     : BT.UInt8;
+      Param1     : Byte;
       Parameters : DSI_Data) is abstract;
 
 end HAL.DSI;

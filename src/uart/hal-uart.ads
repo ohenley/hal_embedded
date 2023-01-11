@@ -29,12 +29,7 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Beta_Types;
-
 package HAL.UART is
-   pragma Preelaborate;
-
-   package BT renames Beta_Types;
 
    type UART_Status is
      (Ok,
@@ -46,9 +41,9 @@ package HAL.UART is
      (Data_Size_8b,
       Data_Size_9b);
 
-   type UART_Data_8b is array (Natural range <>) of BT.UInt8;
+   type UART_Data_8b is array (Natural range <>) of Byte;
 
-   type UART_Data_9b is array (Natural range <>) of BT.UInt9;
+   type UART_Data_9b is array (Natural range <>) of UInt9;
 
    type UART_Port is limited interface;
 

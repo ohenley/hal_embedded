@@ -30,7 +30,6 @@
 ------------------------------------------------------------------------------
 
 package HAL.Time is
-   pragma Preelaborate;
 
    type Delays is limited interface;
 

@@ -31,69 +31,60 @@
 
 with System;
 
-with Beta_Types;
-
 package HAL.Bitmap is
-   pragma Preelaborate;
 
-   package BT renames Beta_Types;
-
-   type Orientation_Mode is
-     (Default,
-      Portrait,
-      Landscape);
+   type Orientation_Mode is (Default, Portrait, Landscape);
 
    subtype Actual_Orientation is Orientation_Mode range Portrait .. Landscape;
 
    type Bitmap_Color_Mode is
-     (ARGB_8888,
-      RGB_888,
-      RGB_565,
-      ARGB_1555,
-      ARGB_4444,
-      L_8,
-      AL_44,
-      AL_88,
-      L_4,
-      A_8,
-      A_4,
-      M_1 -- Monochrome
-     ) with Size => 4;
+     (ARGB_8888, RGB_888, RGB_565, ARGB_1555, ARGB_4444, L_8, AL_44, AL_88,
+      L_4, A_8, A_4) with
+     Size => 4;
 
    function Bits_Per_Pixel (Mode : Bitmap_Color_Mode) return Positive is
-     (case Mode is
-         when ARGB_8888 => 32,
-         when RGB_888 => 24,
-         when RGB_565 | ARGB_1555 | ARGB_4444 | AL_88 => 16,
-         when L_8 | AL_44 | A_8 => 8,
-         when L_4 | A_4 => 4,
-         when M_1 => 1);
+     (case Mode is when ARGB_8888 => 32, when RGB_888 => 24,
+        when RGB_565 | ARGB_1555 | ARGB_4444 | AL_88 => 16,
+        when L_8 | AL_44 | A_8 => 8, when L_4 | A_4 => 4);
 
-   type Point is record
-      X : Natural;
-      Y : Natural;
-   end record;
+   type Bitmap_Buffer is tagged record
+      Addr : System.Address;
 
-   type Point_Array is array (Natural range <>) of Point;
+      Width  : Natural;
+      Height : Natural;
+      --  Width and Height of the buffer. Note that it's the user-visible width
+      --  (see below for the meaning of the Swapped value).
 
-   function "+" (P1, P2 : Point) return Point
-     is ((P1.X + P2.X, P1.Y + P2.Y));
+      Color_Mode : Bitmap_Color_Mode;
+      --  The buffer color mode. Note that not all color modes are supported by
+      --  the hardware acceleration (if any), so you need to check your actual
+      --  hardware to optimize buffer transfers.
 
-   function "-" (P1, P2 : Point) return Point
-     is ((P1.X - P2.X, P1.Y - P2.Y));
-
-   type Rect is record
-      Position : Point;
-      Width    : Natural;
-      Height   : Natural;
+      Swapped : Boolean := False;
+      --  If Swap is set, then operations on this buffer will consider:
+      --  Width0 = Height
+      --  Height0 = Width
+      --  Y0 = Buffer.Width - X - 1
+      --  X0 = Y
+      --
+      --  As an example, the Bitmap buffer that corresponds to a 240x320
+      --  swapped display (to display images in landscape mode) with have
+      --  the following values:
+      --  Width => 320
+      --  Height => 240
+      --  Swapped => True
+      --  So Put_Pixel (Buffer, 30, 10, Color) will place the pixel at
+      --  Y0 = 320 - 30 - 1 = 289
+      --  X0 = 10
    end record;
 
    type Bitmap_Color is record
-      Alpha : BT.UInt8;
-      Red   : BT.UInt8;
-      Green : BT.UInt8;
-      Blue  : BT.UInt8;
-   end record with Size => 32;
+      Alpha : Byte;
+      Red   : Byte;
+      Green : Byte;
+      Blue  : Byte;
+   end record with
+     Size => 32;
 
    for Bitmap_Color use record
       Blue  at 0 range 0 .. 7;
@@ -102,199 +93,92 @@ package HAL.Bitmap is
       Alpha at 3 range 0 .. 7;
    end record;
 
-   type Bitmap_Buffer is interface;
-
-   type Any_Bitmap_Buffer is access all Bitmap_Buffer'Class;
-
-   function Width (Buffer : Bitmap_Buffer) return Natural is abstract;
-   --  Width of the buffer. Note that it's the user-visible width
-   --  (see below for the meaning of the Swapped value).
-
-   function Height (Buffer : Bitmap_Buffer) return Natural is abstract;
-   --  Height of the buffer. Note that it's the user-visible height
-   --  (see below for the meaning of the Swapped value).
-
-   function Swapped (Buffer : Bitmap_Buffer) return Boolean is abstract;
-   --  If Swapped return True, operations on this buffer will consider:
-   --  Width0 = Height
-   --  Height0 = Width
-   --  Y0 = Buffer.Width - X - 1
-   --  X0 = Y
-   --
-   --  As an example, the Bitmap buffer that corresponds to a 240x320
-   --  swapped display (to display images in landscape mode) with have
-   --  the following values:
-   --  Width => 320
-   --  Height => 240
-   --  Swapped => True
-   --  So Put_Pixel (Buffer, 30, 10, Color) will place the pixel at
-   --  Y0 = 320 - 30 - 1 = 289
-   --  X0 = 10
-
-   function Color_Mode (Buffer : Bitmap_Buffer)
-    return Bitmap_Color_Mode is abstract;
-   --  The buffer color mode. Note that not all color modes are supported by
-   --  the hardware acceleration (if any), so you need to check your actual
-   --  hardware to optimize buffer transfers.
-
-   function Mapped_In_RAM (Buffer : Bitmap_Buffer) return Boolean is abstract;
-   --  Return True is the bitmap is storred in the CPU address space
-
-   function Memory_Address (Buffer : Bitmap_Buffer)
-    return System.Address is abstract
-     with Pre'Class => Buffer.Mapped_In_RAM;
-   --  Return the address of the bitmap in the CPU address space. If the bitmap
-   --  is not in the CPU address space, the result is undefined.
-
-   procedure Set_Source (Buffer : in out Bitmap_Buffer;
-                         ARGB   : Bitmap_Color) is abstract;
-   --  Set the source color for the following drawing operations
-
-   procedure Set_Source (Buffer : in out Bitmap_Buffer;
-                         Native : BT.UInt32) is abstract;
-   --  Set the source color for the following drawing operations
-
-   function Source
-     (Buffer : Bitmap_Buffer)
-      return Bitmap_Color is abstract;
-   --  Current source color in ARGB format
-
-   function Source
-     (Buffer : Bitmap_Buffer)
-      return BT.UInt32 is abstract;
-   --  Current source color in native format
+   procedure Set_Pixel
+     (Buffer : Bitmap_Buffer; X : Natural; Y : Natural; Value : Bitmap_Color);
 
    procedure Set_Pixel
-     (Buffer  : in out Bitmap_Buffer;
-      Pt      : Point) is abstract;
-   --  Set pixel with current source color
-
-   procedure Set_Pixel
-     (Buffer  : in out Bitmap_Buffer;
-      Pt      : Point;
-      Color   : Bitmap_Color) is abstract;
-   --  Set pixel with Color and update source color
-
-   procedure Set_Pixel
-     (Buffer  : in out Bitmap_Buffer;
-      Pt      : Point;
-      Native  : BT.UInt32) is abstract;
-   --  Set pixel with low level native pixel value Color and
-   --  update source color
+     (Buffer : Bitmap_Buffer; X : Natural; Y : Natural; Value : UInt32);
 
    procedure Set_Pixel_Blend
-     (Buffer : in out Bitmap_Buffer;
-      Pt     : Point) is abstract;
+     (Buffer : Bitmap_Buffer; X : Natural; Y : Natural; Value : Bitmap_Color);
 
-   function Pixel
-     (Buffer : Bitmap_Buffer;
-      Pt     : Point)
-      return Bitmap_Color is abstract;
-   --  Return ARGB pixel value
+   function Get_Pixel
+     (Buffer : Bitmap_Buffer; X : Natural; Y : Natural) return Bitmap_Color;
 
-   function Pixel
-     (Buffer : Bitmap_Buffer;
-      Pt     : Point)
-      return BT.UInt32 is abstract;
-   --  Return raw pixel value
+   function Get_Pixel
+     (Buffer : Bitmap_Buffer; X : Natural; Y : Natural) return UInt32;
 
-   procedure Draw_Line
-     (Buffer      : in out Bitmap_Buffer;
-      Start, Stop : Point;
-      Thickness   : Natural := 1;
-      Fast        : Boolean := True) is abstract;
-   --  If fast is set, then the line thickness uses squares to draw, while
-   --  if not set, then the line will be composed of circles, much slower to
-   --  draw but providing nicer line cap.
+   procedure Fill (Buffer : Bitmap_Buffer; Color : Bitmap_Color);
+   --  Fill the specified buffer with 'Color'
 
-   procedure Fill
-     (Buffer : in out Bitmap_Buffer) is abstract;
-   --  Fill the entire buffer with the source color
+   procedure Fill (Buffer : Bitmap_Buffer; Color : UInt32);
+   --  Same as above, using the destination buffer native color representation
 
    procedure Fill_Rect
-     (Buffer : in out Bitmap_Buffer;
-      Area   : Rect) is abstract;
-   --  Fill the specified area of the buffer with the source color
+     (Buffer : Bitmap_Buffer; Color : Bitmap_Color; X : Integer; Y : Integer;
+      Width  : Integer; Height : Integer);
+   --  Fill the specified area of the buffer with 'Color'
+
+   procedure Fill_Rect
+     (Buffer : Bitmap_Buffer; Color : UInt32; X : Integer; Y : Integer;
+      Width  : Integer; Height : Integer);
+   --  Same as above, using the destination buffer native color representation
 
    procedure Copy_Rect
-     (Src_Buffer  : Bitmap_Buffer'Class;
-      Src_Pt      : Point;
-      Dst_Buffer  : in out Bitmap_Buffer;
-      Dst_Pt      : Point;
-      Bg_Buffer   : Bitmap_Buffer'Class;
-      Bg_Pt       : Point;
-      Width       : Natural;
-      Height      : Natural;
-      Synchronous : Boolean) is abstract;
+     (Src_Buffer  : Bitmap_Buffer'Class; X_Src : Natural; Y_Src : Natural;
+      Dst_Buffer  : Bitmap_Buffer; X_Dst : Natural; Y_Dst : Natural;
+      Bg_Buffer   : Bitmap_Buffer'Class; X_Bg : Natural; Y_Bg : Natural;
+      Width       : Natural; Height : Natural; Synchronous : Boolean;
+      Clean_Cache : Boolean := True);
 
    procedure Copy_Rect
-     (Src_Buffer  : Bitmap_Buffer'Class;
-      Src_Pt      : Point;
-      Dst_Buffer  : in out Bitmap_Buffer;
-      Dst_Pt      : Point;
-      Width       : Natural;
-      Height      : Natural;
-      Synchronous : Boolean) is abstract;
+     (Src_Buffer  : Bitmap_Buffer'Class; X_Src : Natural; Y_Src : Natural;
+      Dst_Buffer  : Bitmap_Buffer; X_Dst : Natural; Y_Dst : Natural;
+      Width       : Natural; Height : Natural; Synchronous : Boolean;
+      Clean_Cache : Boolean := True);
 
    procedure Copy_Rect_Blend
-     (Src_Buffer  : Bitmap_Buffer;
-      Src_Pt      : Point;
-      Dst_Buffer  : in out Bitmap_Buffer'Class;
-      Dst_Pt      : Point;
-      Width       : Natural;
-      Height      : Natural;
-      Synchronous : Boolean) is abstract;
+     (Src_Buffer  : Bitmap_Buffer'Class; X_Src : Natural; Y_Src : Natural;
+      Dst_Buffer  : Bitmap_Buffer; X_Dst : Natural; Y_Dst : Natural;
+      Width       : Natural; Height : Natural; Synchronous : Boolean;
+      Clean_Cache : Boolean := True);
 
    procedure Draw_Vertical_Line
-     (Buffer : in out Bitmap_Buffer;
-      Pt     : Point;
-      Height : Integer) is abstract;
+     (Buffer : Bitmap_Buffer; Color : UInt32; X : Integer; Y : Integer;
+      Height : Integer);
+
+   procedure Draw_Vertical_Line
+     (Buffer : Bitmap_Buffer; Color : Bitmap_Color; X : Integer; Y : Integer;
+      Height : Integer);
 
    procedure Draw_Horizontal_Line
-     (Buffer : in out Bitmap_Buffer;
-      Pt     : Point;
-      Width  : Integer) is abstract;
+     (Buffer : Bitmap_Buffer; Color : UInt32; X : Integer; Y : Integer;
+      Width  : Integer);
+
+   procedure Draw_Horizontal_Line
+     (Buffer : Bitmap_Buffer; Color : Bitmap_Color; X : Integer; Y : Integer;
+      Width  : Integer);
 
    procedure Draw_Rect
-     (Buffer    : in out Bitmap_Buffer;
-      Area      : Rect;
-      Thickness : Natural := 1) is abstract;
+     (Buffer : Bitmap_Buffer; Color : Bitmap_Color; X : Integer; Y : Integer;
+      Width  : Integer; Height : Integer);
    --  Draws a rectangle
 
-   procedure Draw_Rounded_Rect
-     (Buffer    : in out Bitmap_Buffer;
-      Area      : Rect;
-      Radius    : Natural;
-      Thickness : Natural := 1) is abstract;
+   function Buffer_Size (Buffer : Bitmap_Buffer) return Natural;
 
-   procedure Fill_Rounded_Rect
-     (Buffer : in out Bitmap_Buffer;
-      Area   : Rect;
-      Radius : Natural) is abstract;
+   function Bitmap_Color_To_Word
+     (Mode : Bitmap_Color_Mode; Col : Bitmap_Color) return UInt32;
+   --  Translates the DMA2D Color into native buffer color
 
-   procedure Draw_Circle
-     (Buffer : in out Bitmap_Buffer;
-      Center : Point;
-      Radius : Natural) is abstract;
+   function Word_To_Bitmap_Color
+     (Mode : Bitmap_Color_Mode; Col : UInt32) return Bitmap_Color;
+   --  Translates the native buffer color into DMA2D Color
 
-   procedure Fill_Circle
-     (Buffer : in out Bitmap_Buffer;
-      Center : Point;
-      Radius : Natural) is abstract;
+   procedure Wait_Transfer (Buffer : Bitmap_Buffer);
+   --  Makes sure the DMA2D transfers are done
 
-   procedure Cubic_Bezier
-     (Buffer         : in out Bitmap_Buffer;
-      P1, P2, P3, P4 : Point;
-      N              : Positive := 20;
-      Thickness      : Natural := 1) is abstract;
-
-   procedure Bezier
-     (Buffer         : in out Bitmap_Buffer;
-      Input_Points   : Point_Array;
-      N              : Positive := 20;
-      Thickness      : Natural := 1) is abstract;
-
-   function Buffer_Size (Buffer : Bitmap_Buffer) return Natural is abstract;
+   Null_Buffer : constant Bitmap_Buffer :=
+     (System.Null_Address, 0, 0, RGB_888, False);
 
    Transparent         : constant Bitmap_Color := (000, 000, 000, 000);
    Dark_Red            : constant Bitmap_Color := (255, 139, 000, 000);
@@ -309,9 +193,9 @@ package HAL.Bitmap is
    Dark_Salmon         : constant Bitmap_Color := (255, 233, 150, 122);
    Salmon              : constant Bitmap_Color := (255, 250, 128, 114);
    Light_Salmon        : constant Bitmap_Color := (255, 255, 160, 122);
-   Dark_Orange         : constant Bitmap_Color := (255, 255, 140, 000);
-   Orange              : constant Bitmap_Color := (255, 255, 165, 000);
-   Light_Orange        : constant Bitmap_Color := (255, 255, 069, 000);
+   Orange              : constant Bitmap_Color := (255, 255, 140, 000);
+   Light_Orange        : constant Bitmap_Color := (255, 255, 165, 000);
+   Dark_Orange         : constant Bitmap_Color := (255, 255, 069, 000);
    Gold                : constant Bitmap_Color := (255, 255, 215, 000);
    Dark_Golden_Rod     : constant Bitmap_Color := (255, 184, 134, 011);
    Golden_Rod          : constant Bitmap_Color := (255, 218, 165, 032);
