@@ -29,6 +29,8 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Beta_Types; use Beta_Types;
+
 package HAL.SDMMC is
    pragma Preelaborate;
 
